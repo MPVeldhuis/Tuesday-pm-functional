@@ -127,6 +127,8 @@ plot(CHM_teak.recl,
      col = c ("yellow", "orange", "red", "blue"), # hard coding colors
      main = "Canopy height classes\n Lower Tekettle",
      legend = FALSE)
+plot(extent(CHM_teak.recl), add=T, lwd=3)
+
 
 # enable plotting legend outside bounds
 par(xpd = TRUE) 
@@ -154,6 +156,15 @@ writeRaster(CHM_teak.recl,
             options = "COMPRESS=LZW",
             overwrite = TRUE,
             NAflag = -9999)
+
+```
+
+```{r create-file-with-sessionInfo}
+
+sink(paste0(format(Sys.time(), "%Y-%m-%d_%H%M%S"),
+            "_sessionInfo.txt"))
+
+```
 
 ```
 
