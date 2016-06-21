@@ -29,7 +29,7 @@ library(rgdal)
 
 # Load raster
 CHM_teak <- raster("../NEONdata/D17-California/TEAK/2013/lidar/TEAK_lidarCHM.tif")
-
+chosen.breaks <- c(6,30,50,100)
 # quick sanity check
 plot(CHM_teak)
 
@@ -52,9 +52,17 @@ plot(CHM_teak)
 
 density(CHM_teak)
 
+plot_chm_density <- function(rast.in, title, bins) {
+  density(rast.in, main=title, xlab = "Height (m)")
+  abline(v = bins, col="red")
+}
+
+plot_chm_density(rast.in = CHM_teak, 
+                 title = "Canopy heights at Teakettle", 
+                 bins= chosen.breaks)
+
+
 ```
-
-
 
 ## Classify the raster according to some distribution – low medium and tall trees. This could be done using a histogram potentially or we could just decide that 6m is generally grasses / understory, 10m small trees,and the rest are tall trees. A function could import the desired thresholds. 
 
@@ -169,5 +177,41 @@ sink()
 
 ```
 
+
+
+```{r}
+
+# function to create a reclassify matrix from a set of breaks
+create_height_class_matrix <- function(chosen.breaks) { 
+  # Get the length of the breaks vector to
+  # figure how many classes we will have
+  br.len <- length(chosen.breaks)
+  
+  # initialize heigth class vector with 0
+  height.class.m <- c(0)
+  
+  # for input of breaks = c(6,30,50,100)
+  # we would like to make something like this
+  
+  # c(0,6,1,
+  #   6,30,2,
+  #   30,50,3
+  #   50,100,4)
+  
+  for (i in 1:br.len) {
+    height.class.m <- c(height.class.m, chosen.breaks[i - 1], chosen.breaks[i], i)
+  }
+  
+  reclass.height.mat <- matrix(height.class.m,
+                               ncol =3,
+                               byrow = TRUE)
+  
+  reclass.height.mat
+  
+}
+
+create_height_class_matrix(chosen.breaks)
+
 ```
+
 
