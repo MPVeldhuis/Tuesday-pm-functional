@@ -100,6 +100,7 @@ plot(CHM_teak.recl,
      col = c ("yellow", "orange", "red", "blue"), # hard coding colors
      main = "Canopy height classes\n Lower Tekettle",
      legend = FALSE)
+     
 
 # enable plotting legend outside bounds
 par(xpd = TRUE) 
