@@ -20,6 +20,7 @@ Start by putting up objectives/tasks that students will be working though:
 # load libraries
 library(raster)
 library(rgdal)
+source("scripts/functions.R")
 
 ```
 
