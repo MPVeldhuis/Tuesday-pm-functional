@@ -8,7 +8,152 @@ output: html_document
 Start by putting up objectives/tasks that students will be working though:
 1. Import a raster — A lidar canopy height model (lidar/Teak_lidarCHM.tif)
 1. For the CHM, set values == 0 to NA (not trees)
-1. Classify the raster according to some distribution – low medium and tall trees. This could be done using a histogram potentially or we could just decide that <2m is generally grasses / understory, <6m small trees,and the rest are tall trees. A function could import the desired thresholds. Visualize density and plot vertical cutoff lines.
+1. Classify the raster according to some distribution – low medium and tall trees. This could be done using a histogram potentially or we could just decide that 6m is generally grasses / understory, 10m small trees,and the rest are tall trees. A function could import the desired thresholds. 
 1. Plot the classified raster, add a legend for each “class” - legends are super tricky to simplifying this process with a function would be good.  see: http://neon-workwithdata.github.io/neon-data-institute-2016/R/classify-by-threshold-R/  for my take on forcing a legend outside of the plot area using par settings. You may have other better forms of magic to make this work well. :)
 1. Export the plot figure to a pdf – publishable
 1. Export the classified raster as a geotiff with NaFlagg = -9999 to an outputs folder.
+
+## Load libraries
+
+```{r libraries}
+
+# load libraries
+library(raster)
+library(rgdal)
+
+```
+
+## Import a raster — A lidar canopy height model (lidar/Teak_lidarCHM.tif)
+
+```{r import-raster}
+
+# Load raster
+CHM_teak <- raster("../NEONdata/D17-California/TEAK/2013/lidar/TEAK_lidarCHM.tif")
+
+# quick sanity check
+plot(CHM_teak)
+
+```
+
+## For the CHM, set values == 0 to NA (not trees)
+
+```{r Set 0 values to NA}
+
+# Set 0 values to NA
+CHM_teak[CHM_teak==0] <- NA
+hist(CHM_teak)
+plot(CHM_teak)
+
+```
+
+# Check density
+
+```{r check-density}
+
+density(CHM_teak)
+
+```
+
+
+
+## Classify the raster according to some distribution – low medium and tall trees. This could be done using a histogram potentially or we could just decide that 6m is generally grasses / understory, 10m small trees,and the rest are tall trees. A function could import the desired thresholds. 
+
+```{r reclassify-raster}
+
+class.recl <- c(0, 6, 1,
+                6, 30, 2,
+                30, 50, 3,
+                50, 70, 4)
+class.recl
+recl.matr <- matrix(class.recl, ncol=3, byrow=TRUE)
+recl.matr
+
+CHM_teak.recl <- reclassify(CHM_teak, recl.matr)
+plot(CHM_teak.recl)
+
+density(CHM_teak, 
+        main = "Canopy heights at Teakettle site\n with bin cutoffs in red",
+        xlab = "Height (m)")
+abline(v = recl.matr[,2], col = "red")
+
+```
+
+## Save to pdf
+
+```{r save-pdf}
+
+pdf(file = "Teak_CHM_density_with_breaks.pdf", width = 6, height = 7)
+density(CHM_teak, 
+        main = "Canopy heights at Teakettle site\n with bin cutoffs in red",
+        xlab = "Height (m)")
+abline(v = recl.matr[,2], col = "red")
+dev.off()
+```
+
+## Plot with nice legend
+
+```{r plot-with-legend}
+
+par(xpd = FALSE, mar = c(5.1, 4.1, 4.1, 4.5))
+
+plot(CHM_teak.recl,
+     col = c ("yellow", "orange", "red", "blue"), # hard coding colors
+     main = "Canopy height classes\n Lower Tekettle",
+     legend = FALSE)
+
+# enable plotting legend outside bounds
+par(xpd = TRUE) 
+
+# legend position
+leg.x <- par()$usr[2] + 20
+leg.y <- par()$usr[4] + 50 - (abs(par()$usr[3] - par()$usr[4]) / 2)
+
+# add the legend
+legend(leg.x, leg.y,
+       legend = c("0-6 m", "6-30 m", "30-50 m", "50-100 m"),
+       fill = c("yellow", "orange", "red", "blue"),
+       bty = "n")
+
+```
+
+## Save a pdf
+
+```{r}
+
+pdf(file = "Canopy_height_map_reclassifief_TEAK.pdf", width = 7, height = 6)
+par(xpd = FALSE, mar = c(5.1, 4.1, 4.1, 4.5))
+
+plot(CHM_teak.recl,
+     col = c ("yellow", "orange", "red", "blue"), # hard coding colors
+     main = "Canopy height classes\n Lower Tekettle",
+     legend = FALSE)
+
+# enable plotting legend outside bounds
+par(xpd = TRUE) 
+
+# legend position
+leg.x <- par()$usr[2] + 20
+leg.y <- par()$usr[4] + 50 - (abs(par()$usr[3] - par()$usr[4]) / 2)
+
+# add the legend
+legend(leg.x, leg.y,
+       legend = c("0-6 m", "6-30 m", "30-50 m", "50-100 m"),
+       fill = c("yellow", "orange", "red", "blue"),
+       bty = "n")
+dev.off()
+
+```
+
+## Save the reclassified raster to a GeoTIFF
+
+```{r save-geotiff}
+
+writeRaster(CHM_teak.recl,
+            filename = "reclassified_CHM_TEAK_GeoTIFF.tif",
+            format = "GTiff",
+            options = "COMPRESS=LZW",
+            overwrite = TRUE,
+            NAflag = -9999)
+
+```
+
